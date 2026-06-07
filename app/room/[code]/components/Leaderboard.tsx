@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClientRoom } from "@/lib/game/types";
+import Avatar from "./Avatar";
 
 interface Props {
   room: ClientRoom;
@@ -44,6 +45,7 @@ export default function Leaderboard({ room, onPlayAgain }: Props) {
               <span className="w-6 text-center text-lg">
                 {MEDALS[i] ?? <span className="text-sm text-slate-400">{i + 1}</span>}
               </span>
+              <Avatar avatar={p.avatar} size={32} />
               {p.name}
               {p.id === room.you.id && (
                 <span className="text-xs text-slate-400">(you)</span>

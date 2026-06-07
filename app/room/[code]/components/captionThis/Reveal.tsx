@@ -2,6 +2,7 @@
 
 import type { ClientCaptionThis, ClientRoom } from "@/lib/game/types";
 import CaptionImage from "./CaptionImage";
+import Avatar from "../Avatar";
 
 interface Props {
   room: ClientRoom;
@@ -16,6 +17,8 @@ export default function CaptionReveal({ room, game, onNext }: Props) {
 
   const ranked = [...game.captions].sort((a, b) => b.votes - a.votes);
   const maxVotes = Math.max(0, ...ranked.map((c) => c.votes));
+  const avatarOf = (id: string | null) =>
+    room.players.find((p) => p.id === id)?.avatar ?? 0;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -47,11 +50,12 @@ export default function CaptionReveal({ room, game, onNext }: Props) {
                   {c.votes} {c.votes === 1 ? "vote" : "votes"}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
+                <Avatar avatar={avatarOf(c.authorId)} size={20} />
                 by {nameOf(c.authorId)}
                 {c.authorId === room.you.id && " (you)"}
                 {c.votes > 0 && (
-                  <span className="ml-2 font-semibold text-emerald-300">
+                  <span className="ml-1 font-semibold text-emerald-300">
                     +{game.lastRoundPoints[c.authorId ?? ""] ?? c.votes * 100}
                   </span>
                 )}

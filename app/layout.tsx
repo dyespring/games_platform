@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Two Truths, One Lie",
-  description: "A real-time party game for teams. Submit, vote, and find the liar.",
+  title: "Banter — Party Games for Teams",
+  description:
+    "Quick, hilarious real-time party games for teams. Create a room, share the code, and play together from your phones.",
 };
 
 export const viewport: Viewport = {

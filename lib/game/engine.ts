@@ -1,5 +1,6 @@
 import { customAlphabet } from "nanoid";
 import { GameError } from "./errors";
+import { AVATARS } from "./avatars";
 import {
   ClientGameView,
   ClientPlayer,
@@ -62,9 +63,18 @@ export function addPlayer(room: Room, name: string): Player {
     isHost: room.players.length === 0,
     connected: true,
     score: 0,
+    avatar: pickAvatar(room),
   };
   room.players.push(player);
   return player;
+}
+
+/** Pick an avatar not already used in the room; fall back to random if exhausted. */
+function pickAvatar(room: Room): number {
+  const used = new Set(room.players.map((p) => p.avatar));
+  const free = AVATARS.map((_, i) => i).filter((i) => !used.has(i));
+  const pool = free.length > 0 ? free : AVATARS.map((_, i) => i);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 export function reconnect(room: Room, playerId: string): Player {
@@ -164,6 +174,7 @@ export function sanitizeForClient(room: Room, viewerId: string): ClientRoom {
       isHost: p.isHost,
       connected: p.connected,
       score: p.score,
+      avatar: p.avatar,
       submitted: flags.submitted,
       hasVoted: flags.hasVoted,
     };

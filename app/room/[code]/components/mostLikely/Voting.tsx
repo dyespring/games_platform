@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClientMostLikely, ClientRoom } from "@/lib/game/types";
+import Avatar from "../Avatar";
 
 interface Props {
   room: ClientRoom;
@@ -33,14 +34,17 @@ export default function MostLikelyVoting({ room, game, onVote }: Props) {
               key={p.id}
               disabled={game.you.hasVoted}
               onClick={() => onVote(p.id)}
-              className={`card !p-4 text-left font-semibold transition hover:ring-brand/50 disabled:hover:ring-white/10 ${
+              className={`card flex items-center gap-2.5 !p-4 text-left font-semibold transition hover:ring-brand/50 disabled:hover:ring-white/10 ${
                 picked ? "ring-2 ring-brand bg-brand/15" : ""
               } ${game.you.hasVoted && !picked ? "opacity-50" : ""}`}
             >
-              {p.name}
-              {!p.connected && (
-                <span className="ml-1 text-xs text-slate-500">(away)</span>
-              )}
+              <Avatar avatar={p.avatar} size={32} />
+              <span>
+                {p.name}
+                {!p.connected && (
+                  <span className="ml-1 text-xs text-slate-500">(away)</span>
+                )}
+              </span>
             </button>
           );
         })}

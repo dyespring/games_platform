@@ -26,6 +26,8 @@ export interface Player {
   isHost: boolean;
   connected: boolean;
   score: number;
+  /** Index into the AVATARS list, assigned on join. */
+  avatar: number;
 }
 
 /** Two Truths, One Lie game state. */
@@ -99,6 +101,7 @@ export interface ClientPlayer {
   isHost: boolean;
   connected: boolean;
   score: number;
+  avatar: number;
   /** Has finished the submission step (Two Truths). */
   submitted: boolean;
   /** Has voted in the current round. */

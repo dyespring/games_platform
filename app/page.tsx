@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSocket, rememberIdentity } from "@/lib/socket/client";
+import { GAME_LIST } from "@/lib/game/registry";
 
 type Mode = "create" | "join";
 
@@ -60,12 +61,27 @@ export default function HomePage() {
   return (
     <div className="flex flex-1 flex-col justify-center gap-8">
       <header className="text-center">
-        <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
-          Two Truths, <span className="text-brand">One Lie</span>
+        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.25em] text-brand">
+          Party games for teams
+        </p>
+        <h1 className="text-6xl font-black tracking-tight sm:text-7xl">
+          Banter<span className="text-brand">.</span>
         </h1>
         <p className="mt-3 text-slate-400">
-          The party game where everyone&apos;s a little bit suspicious.
+          Quick, hilarious games to play together — everyone on their own phone.
         </p>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {GAME_LIST.map((g) => (
+            <span
+              key={g.id}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-sm font-medium ring-1 ring-white/10"
+            >
+              <span aria-hidden>{g.emoji}</span>
+              {g.name}
+            </span>
+          ))}
+        </div>
       </header>
 
       <div className="card animate-pop-in">

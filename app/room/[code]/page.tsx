@@ -2,17 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { ClientRoom } from "@/lib/game/types";
+import type { ClientRoom, GameType } from "@/lib/game/types";
 import {
   getSocket,
   recallIdentity,
   rememberIdentity,
 } from "@/lib/socket/client";
 import Lobby from "./components/Lobby";
-import SubmissionForm from "./components/SubmissionForm";
-import VotingPanel from "./components/VotingPanel";
-import RevealPanel from "./components/RevealPanel";
 import Leaderboard from "./components/Leaderboard";
+import SubmissionForm from "./components/twoTruths/SubmissionForm";
+import TwoTruthsVoting from "./components/twoTruths/Voting";
+import TwoTruthsReveal from "./components/twoTruths/Reveal";
+import MostLikelyVoting from "./components/mostLikely/Voting";
+import MostLikelyReveal from "./components/mostLikely/Reveal";
+import CaptionSubmit from "./components/captionThis/Submit";
+import CaptionVoting from "./components/captionThis/Voting";
+import CaptionReveal from "./components/captionThis/Reveal";
 
 export default function RoomPage() {
   const params = useParams<{ code: string }>();
@@ -26,13 +31,11 @@ export default function RoomPage() {
   useEffect(() => {
     const playerId = recallIdentity(code);
     if (!playerId) {
-      // No identity for this room on this device; send them to join properly.
       router.replace("/");
       return;
     }
 
     const socket = getSocket();
-
     const identify = () => socket.emit("player:identify", { code, playerId });
 
     const onUpdate = (snapshot: ClientRoom) => setRoom(snapshot);
@@ -48,8 +51,6 @@ export default function RoomPage() {
     socket.on("room:update", onUpdate);
     socket.on("room:joined", onJoined);
     socket.on("room:error", onError);
-
-    // If already connected (shared singleton), identify right away.
     if (socket.connected) identify();
 
     return () => {
@@ -62,11 +63,14 @@ export default function RoomPage() {
 
   const socket = getSocket();
   const actions = {
-    start: () => socket.emit("game:start"),
+    selectGame: (gameType: GameType) => socket.emit("game:select", { gameType }),
+    start: (options?: { customPrompts?: string[]; customImages?: string[] }) =>
+      socket.emit("game:start", options),
     submit: (statements: string[], lieIndex: number) =>
       socket.emit("statements:submit", { statements, lieIndex }),
-    vote: (guessIndex: number) => socket.emit("vote:cast", { guessIndex }),
-    next: () => socket.emit("spotlight:next"),
+    submitCaption: (text: string) => socket.emit("caption:submit", { text }),
+    vote: (value: string) => socket.emit("vote:cast", { value }),
+    advance: () => socket.emit("game:advance"),
     playAgain: () => socket.emit("game:playAgain"),
   };
 
@@ -78,6 +82,59 @@ export default function RoomPage() {
     );
   }
 
+  const renderPhase = () => {
+    if (room.phase === "lobby") {
+      return (
+        <Lobby room={room} onSelectGame={actions.selectGame} onStart={actions.start} />
+      );
+    }
+    if (room.phase === "results") {
+      return <Leaderboard room={room} onPlayAgain={actions.playAgain} />;
+    }
+
+    if (room.game?.type === "two-truths") {
+      const view = room.game;
+      if (room.phase === "submission") {
+        return <SubmissionForm room={room} game={view} onSubmit={actions.submit} />;
+      }
+      if (room.phase === "voting") {
+        return <TwoTruthsVoting room={room} game={view} onVote={actions.vote} />;
+      }
+      if (room.phase === "reveal") {
+        return <TwoTruthsReveal room={room} game={view} onNext={actions.advance} />;
+      }
+    }
+
+    if (room.game?.type === "most-likely") {
+      const view = room.game;
+      if (room.phase === "voting") {
+        return <MostLikelyVoting room={room} game={view} onVote={actions.vote} />;
+      }
+      if (room.phase === "reveal") {
+        return <MostLikelyReveal room={room} game={view} onNext={actions.advance} />;
+      }
+    }
+
+    if (room.game?.type === "caption-this") {
+      const view = room.game;
+      if (room.phase === "submission") {
+        return <CaptionSubmit room={room} game={view} onSubmit={actions.submitCaption} />;
+      }
+      if (room.phase === "voting") {
+        return <CaptionVoting room={room} game={view} onVote={actions.vote} />;
+      }
+      if (room.phase === "reveal") {
+        return <CaptionReveal room={room} game={view} onNext={actions.advance} />;
+      }
+    }
+
+    return (
+      <div className="flex flex-1 items-center justify-center text-slate-400">
+        Loading...
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       {toast && (
@@ -85,16 +142,7 @@ export default function RoomPage() {
           {toast}
         </div>
       )}
-
-      {room.phase === "lobby" && <Lobby room={room} onStart={actions.start} />}
-      {room.phase === "submission" && (
-        <SubmissionForm room={room} onSubmit={actions.submit} />
-      )}
-      {room.phase === "voting" && <VotingPanel room={room} onVote={actions.vote} />}
-      {room.phase === "reveal" && <RevealPanel room={room} onNext={actions.next} />}
-      {room.phase === "results" && (
-        <Leaderboard room={room} onPlayAgain={actions.playAgain} />
-      )}
+      {renderPhase()}
     </div>
   );
 }

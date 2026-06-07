@@ -8,14 +8,16 @@ import {
 } from "../game/types";
 import {
   addPlayer,
+  advance,
   castVote,
   disconnect,
   GameError,
-  nextSpotlight,
   playAgain,
   reconnect,
   sanitizeForClient,
+  selectGame,
   startGame,
+  submitCaption,
   submitStatements,
 } from "../game/engine";
 import { createRoom, getRoom, reapStaleRooms } from "../game/store";
@@ -109,19 +111,27 @@ export function registerHandlers(io: IO): void {
       }
     });
 
-    socket.on("game:start", () => withRoom((room, pid) => startGame(room, pid)));
+    socket.on("game:select", ({ gameType }) =>
+      withRoom((room, pid) => selectGame(room, pid, gameType))
+    );
+
+    socket.on("game:start", (data) =>
+      withRoom((room, pid) => startGame(room, pid, data))
+    );
 
     socket.on("statements:submit", ({ statements, lieIndex }) =>
       withRoom((room, pid) => submitStatements(room, pid, statements, lieIndex))
     );
 
-    socket.on("vote:cast", ({ guessIndex }) =>
-      withRoom((room, pid) => castVote(room, pid, guessIndex))
+    socket.on("caption:submit", ({ text }) =>
+      withRoom((room, pid) => submitCaption(room, pid, text))
     );
 
-    socket.on("spotlight:next", () =>
-      withRoom((room, pid) => nextSpotlight(room, pid))
+    socket.on("vote:cast", ({ value }) =>
+      withRoom((room, pid) => castVote(room, pid, value))
     );
+
+    socket.on("game:advance", () => withRoom((room, pid) => advance(room, pid)));
 
     socket.on("game:playAgain", () =>
       withRoom((room, pid) => playAgain(room, pid))

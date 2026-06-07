@@ -1,23 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import type { ClientRoom } from "@/lib/game/types";
+import type { ClientRoom, ClientTwoTruths } from "@/lib/game/types";
 import { STATEMENTS_PER_PLAYER } from "@/lib/game/types";
-import PlayerList from "./PlayerList";
+import PlayerList from "../PlayerList";
 
 interface Props {
   room: ClientRoom;
+  game: ClientTwoTruths;
   onSubmit: (statements: string[], lieIndex: number) => void;
 }
 
-export default function SubmissionForm({ room, onSubmit }: Props) {
+export default function SubmissionForm({ room, game, onSubmit }: Props) {
   const [statements, setStatements] = useState<string[]>(
     Array.from({ length: STATEMENTS_PER_PLAYER }, () => "")
   );
   const [lieIndex, setLieIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (room.you.submitted) {
+  if (game.you.submitted) {
     const readyCount = room.players.filter((p) => p.submitted).length;
     return (
       <div className="flex flex-1 flex-col gap-6">
@@ -73,9 +74,7 @@ export default function SubmissionForm({ room, onSubmit }: Props) {
           return (
             <div
               key={i}
-              className={`card !p-4 transition ${
-                isLie ? "ring-2 ring-rose-400/60" : ""
-              }`}
+              className={`card !p-4 transition ${isLie ? "ring-2 ring-rose-400/60" : ""}`}
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">

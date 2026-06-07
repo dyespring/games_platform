@@ -1,24 +1,54 @@
-# Two Truths, One Lie — Real-Time Party Game
+# Team Party Games — Real-Time Game Platform
 
-A live multiplayer party game for teams. Each player joins a room from their own
-device, submits two truths and one lie, and the group votes to spot the liar —
-one player in the spotlight at a time, with live reveals and scoring.
+A live multiplayer party-game platform for teams. Each player joins a room from
+their own device; the host picks a game in the lobby and everyone plays together
+with live voting, reveals, and a leaderboard.
 
 Built with **Next.js (App Router, TypeScript)** and a **Socket.IO** real-time
-layer running on a single custom Node server.
+layer running on a single custom Node server. The room/player/socket layer is
+shared; each game is an isolated module under `lib/game/games/`.
+
+## Games
+
+### Two Truths, One Lie
+
+1. **Submission** — Everyone writes 3 statements and marks which one is the lie.
+2. **Voting** — One player is spotlighted at a time; everyone else guesses the lie.
+3. **Reveal** — The lie is revealed, votes shown, points awarded.
+4. **Results** — Final leaderboard.
+
+Scoring: **+100** to each voter who spots the lie; **+50** to the spotlight player
+for every voter they fool. (2+ players.)
+
+### Most Likely To
+
+1. **Voting** — A prompt appears ("most likely to reply-all by accident"); everyone
+   votes for the person they think fits (you can't vote for yourself).
+2. **Reveal** — Vote counts per person are shown with the round's "winner".
+3. Repeats for several prompts, then a final leaderboard of who got the most votes.
+
+Prompts come from a built-in library; the host can add custom prompts in the
+lobby. (3+ players.)
+
+### Caption This
+
+1. **Submission** — A funny image appears; everyone writes a caption for it.
+2. **Voting** — All captions are shown anonymously (shuffled); everyone votes for
+   the funniest (you can't vote for your own).
+3. **Reveal** — Captions are revealed with their authors and vote counts.
+4. Repeats for several images (default 4 rounds), then a final leaderboard.
+
+Scoring: **+100** per vote a caption receives. Images come from a built-in
+library of meme templates; the host can add custom image URLs (e.g. a team photo)
+in the lobby. (3+ players.)
 
 ## How it plays
 
 1. **Lobby** — One person creates a room and shares the 4-letter code. Others join.
-2. **Submission** — Everyone writes 3 statements and marks which one is the lie.
-3. **Voting** — One player is spotlighted at a time; everyone else guesses the lie.
-4. **Reveal** — The lie is revealed, votes shown, and points awarded.
-5. **Results** — Final leaderboard. The host can start a new round.
-
-### Scoring
-
-- **+100** to each voter who correctly spots the lie.
-- **+50** to the spotlight player for every voter they fool.
+   The host picks a game (and optionally adds prompts) and starts.
+2. Play the chosen game's rounds with live voting and reveals.
+3. **Results** — Final leaderboard. The host can return to the lobby and pick a
+   game again (scores reset).
 
 ## Getting started
 
@@ -78,20 +108,34 @@ build/start commands above and set instances to 1.
 ## Project structure
 
 ```
-server.ts                     Custom Node server: Next.js + Socket.IO
-lib/game/types.ts             Shared types + socket event contracts
-lib/game/store.ts             In-memory room store + room-code generation
-lib/game/engine.ts            Authoritative game logic, scoring, sanitization
-lib/socket/handlers.ts        Socket.IO event wiring + per-viewer broadcasts
-lib/socket/client.ts          Browser socket singleton + reconnect identity
-app/page.tsx                  Home: create / join a room
-app/room/[code]/page.tsx      Room page: renders the current phase
-app/room/[code]/components/   Lobby, SubmissionForm, VotingPanel, RevealPanel,
-                              Leaderboard, PlayerList
+server.ts                       Custom Node server: Next.js + Socket.IO
+lib/game/types.ts               Shared types + socket event contracts
+lib/game/errors.ts              GameError (user-facing rule violations)
+lib/game/store.ts               In-memory room store + room-code generation
+lib/game/registry.ts            Game metadata (name, tagline, minPlayers)
+lib/game/engine.ts              Core membership + lobby + game dispatcher
+lib/game/games/twoTruths.ts     Two Truths logic, scoring, sanitization
+lib/game/games/mostLikely.ts    Most Likely To logic, tally, sanitization
+lib/game/games/mostLikelyPrompts.ts  Built-in prompt library
+lib/game/games/captionThis.ts   Caption This logic, anonymized voting, scoring
+lib/game/games/captionImages.ts Built-in image library
+lib/socket/handlers.ts          Socket.IO event wiring + per-viewer broadcasts
+lib/socket/client.ts            Browser socket singleton + reconnect identity
+app/page.tsx                    Home: create / join a room
+app/room/[code]/page.tsx        Room page: dispatches on gameType + phase
+app/room/[code]/components/     Lobby, Leaderboard, PlayerList (shared) +
+                                twoTruths/ and mostLikely/ phase UIs
 ```
 
-## Adding more games later
+## Adding more games
 
-The room/player/socket layer is generic; `lib/game/engine.ts` isolates the
-Two-Truths phase machine. Additional games (e.g. "Most Likely To",
-"Caption This") can be added as sibling engines selected at room creation.
+The room/player/socket layer is game-agnostic. To add a game:
+
+1. Add its `GameType` and state to `lib/game/types.ts` (extend the `GameState`
+   and `ClientGameView` unions).
+2. Create `lib/game/games/<game>.ts` exporting `start`, `vote`, `advance`,
+   `sanitize`, and `playerFlags`.
+3. Register metadata in `lib/game/registry.ts` and route it in
+   `lib/game/engine.ts`.
+4. Add phase components under `app/room/[code]/components/<game>/` and wire them
+   into `app/room/[code]/page.tsx`.

@@ -15,11 +15,10 @@ export function createRoom(): Room {
 
   const room: Room = {
     code,
+    gameType: null,
     phase: "lobby",
     players: [],
-    spotlightIndex: 0,
-    votes: {},
-    lastRoundPoints: {},
+    game: null,
     createdAt: Date.now(),
   };
   rooms.set(code, room);

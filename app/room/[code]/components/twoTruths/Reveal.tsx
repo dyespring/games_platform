@@ -1,34 +1,34 @@
 "use client";
 
-import type { ClientRoom } from "@/lib/game/types";
+import type { ClientRoom, ClientTwoTruths } from "@/lib/game/types";
 
 interface Props {
   room: ClientRoom;
+  game: ClientTwoTruths;
   onNext: () => void;
 }
 
-export default function RevealPanel({ room, onNext }: Props) {
-  const subject = room.players.find((p) => p.id === room.spotlightPlayerId);
-  const statements = room.spotlightStatements ?? [];
-  const lieIndex = room.spotlightLieIndex;
-  const isLast = room.spotlightIndex + 1 >= room.spotlightCount;
+export default function TwoTruthsReveal({ room, game, onNext }: Props) {
+  const subject = room.players.find((p) => p.id === game.spotlightPlayerId);
+  const statements = game.spotlightStatements ?? [];
+  const lieIndex = game.spotlightLieIndex;
+  const isLast = game.spotlightIndex + 1 >= game.spotlightCount;
 
   const nameOf = (id: string) => room.players.find((p) => p.id === id)?.name ?? "?";
 
-  // Group voters by which statement they guessed.
   const guessesByStatement: Record<number, string[]> = {};
-  for (const [voterId, idx] of Object.entries(room.votes)) {
+  for (const [voterId, idx] of Object.entries(game.votes)) {
     (guessesByStatement[idx] ??= []).push(nameOf(voterId));
   }
 
-  const subjectPoints = subject ? room.lastRoundPoints[subject.id] ?? 0 : 0;
+  const subjectPoints = subject ? game.lastRoundPoints[subject.id] ?? 0 : 0;
   const fooledCount = subjectPoints / 50;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
       <header className="animate-pop-in">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-          Spotlight {room.spotlightIndex + 1} of {room.spotlightCount}
+          Spotlight {game.spotlightIndex + 1} of {game.spotlightCount}
         </p>
         <h2 className="text-2xl font-black">
           <span className="text-brand">{subject?.name}</span>&apos;s reveal
@@ -53,9 +53,7 @@ export default function RevealPanel({ room, onNext }: Props) {
                 </p>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                    isLie
-                      ? "bg-rose-500 text-white"
-                      : "bg-emerald-400/20 text-emerald-300"
+                    isLie ? "bg-rose-500 text-white" : "bg-emerald-400/20 text-emerald-300"
                   }`}
                 >
                   {isLie ? "LIE" : "TRUE"}
@@ -76,10 +74,10 @@ export default function RevealPanel({ room, onNext }: Props) {
           Points this round
         </h3>
         <ul className="flex flex-col gap-1.5 text-sm">
-          {Object.keys(room.lastRoundPoints).length === 0 && (
+          {Object.keys(game.lastRoundPoints).length === 0 && (
             <li className="text-slate-400">No points awarded.</li>
           )}
-          {Object.entries(room.lastRoundPoints)
+          {Object.entries(game.lastRoundPoints)
             .sort((a, b) => b[1] - a[1])
             .map(([id, pts]) => (
               <li key={id} className="flex justify-between">
@@ -102,9 +100,7 @@ export default function RevealPanel({ room, onNext }: Props) {
           {isLast ? "See final results" : "Next player"}
         </button>
       ) : (
-        <p className="text-center text-slate-400">
-          Waiting for the host to continue...
-        </p>
+        <p className="text-center text-slate-400">Waiting for the host to continue...</p>
       )}
     </div>
   );

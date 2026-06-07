@@ -1,19 +1,20 @@
 "use client";
 
-import type { ClientRoom } from "@/lib/game/types";
+import type { ClientRoom, ClientTwoTruths } from "@/lib/game/types";
 
 interface Props {
   room: ClientRoom;
-  onVote: (guessIndex: number) => void;
+  game: ClientTwoTruths;
+  onVote: (value: string) => void;
 }
 
-export default function VotingPanel({ room, onVote }: Props) {
-  const subject = room.players.find((p) => p.id === room.spotlightPlayerId);
-  const statements = room.spotlightStatements ?? [];
-  const progress = `${room.spotlightIndex + 1} of ${room.spotlightCount}`;
+export default function TwoTruthsVoting({ room, game, onVote }: Props) {
+  const subject = room.players.find((p) => p.id === game.spotlightPlayerId);
+  const statements = game.spotlightStatements ?? [];
+  const progress = `${game.spotlightIndex + 1} of ${game.spotlightCount}`;
 
   const voters = room.players.filter(
-    (p) => p.id !== room.spotlightPlayerId && p.connected
+    (p) => p.id !== game.spotlightPlayerId && p.connected
   );
   const votedCount = voters.filter((p) => p.hasVoted).length;
 
@@ -23,7 +24,7 @@ export default function VotingPanel({ room, onVote }: Props) {
         Spotlight {progress}
       </p>
       <h2 className="text-2xl font-black">
-        {room.you.isSpotlight ? (
+        {game.you.isSpotlight ? (
           "You're in the spotlight"
         ) : (
           <>
@@ -34,7 +35,7 @@ export default function VotingPanel({ room, onVote }: Props) {
     </header>
   );
 
-  if (room.you.isSpotlight) {
+  if (game.you.isSpotlight) {
     return (
       <div className="flex flex-1 flex-col gap-6">
         {header}
@@ -66,8 +67,8 @@ export default function VotingPanel({ room, onVote }: Props) {
         {statements.map((s, i) => (
           <button
             key={i}
-            disabled={room.you.hasVoted}
-            onClick={() => onVote(i)}
+            disabled={game.you.hasVoted}
+            onClick={() => onVote(String(i))}
             className="card !py-4 text-left transition hover:ring-brand/50 disabled:opacity-60 disabled:hover:ring-white/10"
           >
             <span className="mr-2 font-bold text-brand">{i + 1}.</span>
@@ -76,7 +77,7 @@ export default function VotingPanel({ room, onVote }: Props) {
         ))}
       </div>
 
-      {room.you.hasVoted ? (
+      {game.you.hasVoted ? (
         <div className="card text-center">
           <p className="font-semibold">Vote locked in!</p>
           <p className="mt-1 text-sm text-slate-400">

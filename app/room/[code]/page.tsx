@@ -18,6 +18,8 @@ import MostLikelyReveal from "./components/mostLikely/Reveal";
 import CaptionSubmit from "./components/captionThis/Submit";
 import CaptionVoting from "./components/captionThis/Voting";
 import CaptionReveal from "./components/captionThis/Reveal";
+import SoundToggle from "./components/SoundToggle";
+import { useGameSounds } from "./useGameSounds";
 
 export default function RoomPage() {
   const params = useParams<{ code: string }>();
@@ -73,6 +75,8 @@ export default function RoomPage() {
     advance: () => socket.emit("game:advance"),
     playAgain: () => socket.emit("game:playAgain"),
   };
+
+  useGameSounds(room);
 
   if (!room) {
     return (
@@ -137,6 +141,7 @@ export default function RoomPage() {
 
   return (
     <div className="flex flex-1 flex-col">
+      <SoundToggle />
       {toast && (
         <div className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90%] rounded-xl bg-rose-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg animate-pop-in">
           {toast}

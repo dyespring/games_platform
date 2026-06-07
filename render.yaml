@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: two-truths-one-lie
+    name: banter
     runtime: node
     plan: free
     # Build-time tools (TypeScript, Tailwind, PostCSS) live in devDependencies,
